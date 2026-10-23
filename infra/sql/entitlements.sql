@@ -86,5 +86,7 @@ GRANT SELECT ON entitlements, sandbox_sessions TO rl_service;
 -- The repair executor: may retarget an existing entitlement and append
 -- history and receipts. No INSERT on entitlements, no DELETE anywhere.
 CREATE ROLE rl_executor LOGIN PASSWORD :'executor_pw';
-GRANT SELECT, UPDATE ON entitlements TO rl_executor;
+-- UPDATE is column-scoped: target, version and timestamp only.
+GRANT SELECT ON entitlements, provisioning_runs TO rl_executor;
+GRANT UPDATE (target_workspace_id, version, updated_at) ON entitlements TO rl_executor;
 GRANT SELECT, INSERT ON grant_events, repair_receipts TO rl_executor;

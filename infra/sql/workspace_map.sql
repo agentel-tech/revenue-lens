@@ -32,3 +32,8 @@ CREATE TABLE migration_events (
 
 CREATE ROLE zetaris_reader LOGIN PASSWORD :'reader_pw';
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO zetaris_reader;
+
+-- The repair executor re-reads payment and mapping facts directly before it
+-- acts (not through Zetaris, so no cached view can authorise a write).
+CREATE ROLE rl_executor LOGIN PASSWORD :'executor_pw';
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO rl_executor;

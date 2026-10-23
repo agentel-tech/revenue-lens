@@ -13,7 +13,9 @@
     "seed": "tsx seed/generate.ts",
     "sandbox": "tsx services/sandbox/server.ts",
     "check:access": "tsx scripts/check-access.ts",
-    "zetaris:register": "tsx scripts/register-sources.ts"
+    "zetaris:register": "tsx scripts/register-sources.ts",
+    "check:facts": "tsx scripts/check-facts.ts",
+    "verify:recovery": "tsx scripts/verify-recovery.ts"
   },
   "devDependencies": {
     "tsx": "^4.19.0"

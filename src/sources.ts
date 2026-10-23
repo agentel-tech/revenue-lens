@@ -6,13 +6,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import type { SourceName } from "./contracts.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 for (const file of [path.join(root, ".env"), path.join(root, "infra/.env")]) {
   if (fs.existsSync(file)) process.loadEnvFile(file);
 }
 
-export type SourceName = "billing" | "workspace_map" | "entitlements";
+export type { SourceName };
 export type Role = "owner" | "reader" | "service" | "executor";
 
 export const SOURCES: Record<SourceName, { container: string; database: string; hostPort: number }> = {
