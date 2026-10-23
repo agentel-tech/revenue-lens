@@ -1,0 +1,16 @@
+{
+  "name": "revenue-lens",
+  "version": "0.1.0",
+  "description": "Revenue Lens: finds why a paying customer was not served, across billing, workspace mapping and entitlements.",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "setup": "npx --yes degit meterless/meterless/engines/hmem/reference#0aa7417ba5c826396d91e891328be78c45e6fbf6 vendor/hmem && cd vendor/hmem && npm install --no-audit --no-fund",
+    "notebook": "tsx notebook.ts",
+    "test": "tsx --test test/*.test.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0"
+  }
+}
