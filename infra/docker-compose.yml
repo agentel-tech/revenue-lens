@@ -1,0 +1,61 @@
+# Three independently stored sources for Revenue Lens. Each is its own Postgres
+# container and volume, joined to the local Zetaris network so Zetaris can
+# register them by container name. Run from the repo root:
+#   docker compose -f infra/docker-compose.yml --env-file infra/.env up -d
+name: revenue-lens
+
+x-source: &source
+  image: postgres:16-alpine
+  restart: unless-stopped
+  networks: [zetaris]
+  environment: &env
+    POSTGRES_USER: rl_owner
+    POSTGRES_PASSWORD: ${RL_OWNER_PASSWORD:?set in infra/.env}
+    RL_READER_PASSWORD: ${RL_READER_PASSWORD:?set in infra/.env}
+    RL_SERVICE_PASSWORD: ${RL_SERVICE_PASSWORD:?set in infra/.env}
+    RL_EXECUTOR_PASSWORD: ${RL_EXECUTOR_PASSWORD:?set in infra/.env}
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U rl_owner -d $${POSTGRES_DB}"]
+    interval: 3s
+    retries: 20
+
+services:
+  billing:
+    <<: *source
+    container_name: rl-billing
+    environment: { <<: *env, POSTGRES_DB: billing, RL_SOURCE: billing }
+    ports: ["127.0.0.1:55431:5432"]
+    volumes:
+      - billing-data:/var/lib/postgresql/data
+      - ./initdb/00-init.sh:/docker-entrypoint-initdb.d/00-init.sh:ro
+      - ./sql:/rl-sql:ro
+
+  workspace-map:
+    <<: *source
+    container_name: rl-workspace-map
+    environment: { <<: *env, POSTGRES_DB: workspace_map, RL_SOURCE: workspace_map }
+    ports: ["127.0.0.1:55432:5432"]
+    volumes:
+      - workspace-map-data:/var/lib/postgresql/data
+      - ./initdb/00-init.sh:/docker-entrypoint-initdb.d/00-init.sh:ro
+      - ./sql:/rl-sql:ro
+
+  entitlements:
+    <<: *source
+    container_name: rl-entitlements
+    environment: { <<: *env, POSTGRES_DB: entitlements, RL_SOURCE: entitlements }
+    ports: ["127.0.0.1:55433:5432"]
+    volumes:
+      - entitlements-data:/var/lib/postgresql/data
+      - ./initdb/00-init.sh:/docker-entrypoint-initdb.d/00-init.sh:ro
+      - ./sql:/rl-sql:ro
+
+volumes:
+  billing-data:
+  workspace-map-data:
+  entitlements-data:
+
+networks:
+  zetaris:
+    name: zetaris_default
+    external: true

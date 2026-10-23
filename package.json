@@ -8,9 +8,17 @@
   "scripts": {
     "setup": "npx --yes degit meterless/meterless/engines/hmem/reference#0aa7417ba5c826396d91e891328be78c45e6fbf6 vendor/hmem && cd vendor/hmem && npm install --no-audit --no-fund",
     "notebook": "tsx notebook.ts",
-    "test": "tsx --test test/*.test.ts"
+    "test": "tsx --test test/*.test.ts",
+    "infra:up": "docker compose -f infra/docker-compose.yml --env-file infra/.env up -d --wait",
+    "seed": "tsx seed/generate.ts",
+    "sandbox": "tsx services/sandbox/server.ts",
+    "check:access": "tsx scripts/check-access.ts",
+    "zetaris:register": "tsx scripts/register-sources.ts"
   },
   "devDependencies": {
     "tsx": "^4.19.0"
+  },
+  "dependencies": {
+    "pg": "^8.23.1"
   }
 }

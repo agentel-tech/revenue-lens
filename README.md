@@ -1,3 +1,32 @@
+# Revenue Lens
+
+Track 02, The Agent That Can Explain Why. A customer paid, every system says success, and they still cannot use the service. Revenue Lens investigates across billing, workspace mapping and entitlements, explains why, and verifies the repair.
+
+## Sandbox sources (synthetic data, injected faults)
+
+Three independently stored Postgres sources, registered in Zetaris as three datasources, plus a sandbox product service that returns a real 200 or 403.
+
+```bash
+cp infra/.env.example infra/.env && cp .env.example .env   # local-only values
+npm run infra:up                 # rl-billing, rl-workspace-map, rl-entitlements on zetaris_default
+npm run seed                     # deterministic; --seed <name> for a held-out variant
+npm run sandbox                  # http://127.0.0.1:8790
+npm run check:access -- --all    # every cast member: real HTTP status vs expected
+npm run zetaris:register         # register the three sources, run a cross-source join
+```
+
+| Source | Tables |
+|---|---|
+| billing | products, product_features, billing_accounts, payment_lines |
+| workspace_map | workspace_mappings (validity intervals, versions), migration_events |
+| entitlements | entitlements, grant_events (append-only, keeps mapping version used), provisioning_runs, repair_receipts, sandbox_sessions |
+
+Every key carries `tenant_id`. Zetaris reads through a read-only role and cannot see session tokens. The "still processing" threshold lives in `src/rules.ts`. All data is synthetic; `stale_mapping` rows are injected faults and are labelled in `seed/out/<seed>.json`.
+
+---
+
+The rest of this README is the Meterless agentathon starter this project began from.
+
 # Agentathon Starter: The Research Notebook Agent
 
 A CLI agent whose memory is real H-MEM: it mines what you tell it, ranks what it recalls, explains where every answer came from, and remembers across runs. Zero API keys. Your hackathon project starts by replacing the CLI with your own surface and keeping the memory spine.

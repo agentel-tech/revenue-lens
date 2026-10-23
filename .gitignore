@@ -3,3 +3,5 @@ vendor/
 .notebook/
 .env
 .DS_Store
+infra/.env
+seed/out/
