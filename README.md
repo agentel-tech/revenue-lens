@@ -1,89 +1,85 @@
-# Revenue Lens
+# Revenue Lens · by Agentel
 
-Track 02, The Agent That Can Explain Why. A customer paid, every system says success, and they still cannot use the service. Revenue Lens investigates across billing, workspace mapping and entitlements, explains why, and verifies the repair.
+A paid customer cannot use their service, although provisioning reports success. Revenue Lens investigates billing, workspace mappings and entitlement history through Zetaris, explains its findings with source references, and proposes a controlled repair when supported.
 
-## Sandbox sources (synthetic data, injected faults)
+This is a local synthetic hackathon prototype for Track 02, “The Agent That Can Explain Why”. Synthetic customers and injected faults are labelled. It is not a production service or evidence of real customer adoption.
 
-Three independently stored Postgres sources, registered in Zetaris as three datasources, plus a sandbox product service that returns a real 200 or 403.
+## What works
 
-```bash
-cp infra/.env.example infra/.env && cp .env.example .env   # local-only values
-npm run infra:up                 # rl-billing, rl-workspace-map, rl-entitlements on zetaris_default
-npm run seed                     # deterministic; --seed <name> for a held-out variant
-npm run sandbox                  # http://127.0.0.1:8790
-npm run check:access -- --all    # every cast member: real HTTP status vs expected
-npm run zetaris:register         # register the three sources, run a cross-source join
-```
+- Read-only investigation: a real configured model chooses allowlisted tools; an independent model role checks the proposed explanation against gathered records. These are model workflow roles, not authenticated Agentel network identities.
+- Why card: source conditions, citations, model inference, missing evidence and proposed change are kept distinct. Typed hypotheses are checked against scoped source conditions; arbitrary prose is not formally verified.
+- Controlled recovery: explicit operator confirmation, current-source reread, version checks and one transaction update an existing entitlement. The sandbox service is queried again to establish an actual HTTP403→200 outcome. Same-intent retry returns the original receipt.
+- Bounded tenant scan: permitted synthetic cast only, at most50 distinct payment lines, concurrency2,180-second wall-clock budget; incomplete/capped/timed-out scans are partial. No batch repairs.
+- Meterless H-MEM persists diagnostic hints and recalls within one tenant. It can suggest investigation priority; it never changes facts or permissions. Uses the deterministic reference embedding, not NVIDIA embeddings. Unaudited legacy lessons remain on disk but are excluded from recall.
 
-| Source | Tables |
-|---|---|
-| billing | products, product_features, billing_accounts, payment_lines |
-| workspace_map | workspace_mappings (validity intervals, versions), migration_events |
-| entitlements | entitlements, grant_events (append-only, keeps mapping version used), provisioning_runs, repair_receipts, sandbox_sessions |
+## Requirements and setup
 
-Every key carries `tenant_id`. Zetaris reads through a read-only role and cannot see session tokens. The "still processing" threshold lives in `src/rules.ts`. All data is synthetic; `stale_mapping` rows are injected faults and are labelled in `seed/out/<seed>.json`.
+Node.js with TypeScript execution via `tsx`, Docker/Compose, and an accessible configured Zetaris deployment are required. A NVIDIA (or compatible) model API key is required for the investigation workflow. Without a key the investigation reports unavailable; it does not substitute a canned explanation.
 
----
-
-The rest of this README is the Meterless agentathon starter this project began from.
-
-# Agentathon Starter: The Research Notebook Agent
-
-A CLI agent whose memory is real H-MEM: it mines what you tell it, ranks what it recalls, explains where every answer came from, and remembers across runs. Zero API keys. Your hackathon project starts by replacing the CLI with your own surface and keeping the memory spine.
-
-<img src="images/notebook-loop.svg" alt="Animated: notebook commands run in a terminal while each one maps to a named H-MEM service: remember to MemoryMiningService, ask to MemoryRetrievalService, audit to TrustLedgerService, sleep to SleepCycleService" width="820" />
-
-## Two minutes to first recall
+This repository does not install or license Zetaris. Provision it through the vendor-supported process and confirm its API credentials and datasource connectivity. Existing local development uses an external Docker network named `zetaris_default`; inspect `infra/docker-compose.yml` before adapting deployment.
 
 ```bash
-npx degit meterless/meterless/templates/agentathon-starter my-agent
-cd my-agent
 npm install
-npm run setup        # REQUIRED: vendors the H-MEM reference into vendor/ (gitignored)
-
-npx tsx notebook.ts seed
-npx tsx notebook.ts ask "what did we decide about storage"
+npm run setup
+cp .env.example .env
+cp infra/.env.example infra/.env
 ```
 
-Step 4 is not skippable: `vendor/` is gitignored, so a fresh clone has no engine until setup runs. The startup line always names which engine source loaded.
+Set the model key privately in `.env`, and configure Zetaris access. Never commit either environment file. `npm run setup` vendors the pinned Meterless H-MEM reference because `vendor/` is not committed. Review its source/license separately from this project's license.
 
-Quit the terminal, come back tomorrow, ask again: it still remembers. That persistence (`.notebook/`, also gitignored) is the demo.
-
-## Commands
+For a new disposable sandbox:
 
 ```bash
-npx tsx notebook.ts remember "We always deploy on green CI"
-npx tsx notebook.ts ask "when do we deploy"
-npx tsx notebook.ts audit mem-1        # the memory's append-only ledger history
-npx tsx notebook.ts sleep --preview    # consolidation plan, nothing applied
+npm run infra:up
+npm run seed
+npm run zetaris:register
+npm run sandbox
 ```
 
-## Where the engine is used (judges look here)
+**Seeding is a data mutation/reset operation.** Do not reseed an existing recording or review instance without explicitly choosing to replace its synthetic state. `seed/out/demo.json` fixes the observation time and server-side test sessions. Processing-window demonstrations depend on that observation time; do not interpret old sandbox timestamps as current production data.
 
-The rubric weights "Meterless engine usage" at 25%. Every command routes through a named H-MEM service; nothing is faked:
+In another terminal:
 
-| Command | Engine service | Spec section |
-|---|---|---|
-| `remember` | MemoryMiningService (model-free path) + MemoryStoreService | AGENTS.md 4, 3 |
-| `ask` | MemoryRetrievalService (hybrid formula, reinjection, trace) | AGENTS.md 6 |
-| `audit` | TrustLedgerService (append-only history) | AGENTS.md 9 |
-| `sleep` | SleepCycleService (preview-first, guardrails, backup) | AGENTS.md 8 |
-| answer quality over time | feedback deltas are one call away: `hmem.feedback(id, "helpful")` | AGENTS.md 9.2 |
+```bash
+node --import tsx demo/server.ts
+```
 
-## Add a real model (optional)
+Open `http://127.0.0.1:8791`. Select an account, test access, investigate and inspect the Why card. If a repair plan exists, review it and use the separate confirmation dialog. Normal, incomplete or conflicting cases must not be forced into a repair. Run records are in-process; restarting the demo loses their IDs unless an operator explicitly reloads an archived run for labelled review.
 
-The default answer mode is retrieval-only and fully offline. For model mode, copy `.env.example` to `.env` and set `LLM_API_KEY`. The client in `src/llm-client.ts` speaks the OpenAI chat-completions API, so the provider is configuration only:
+The demo binds localhost and uses a fixed synthetic cast. It does not provide production operator authentication/RBAC. Do not expose its port publicly or attach real billing/entitlement data as-is. Session tokens stay server-side; `.revenue-lens-memory/` is runtime data, not a submission asset.
 
-- NVIDIA hosted Nemotron (default): `LLM_BASE_URL=https://integrate.api.nvidia.com/v1`, `LLM_MODEL=nvidia/nemotron-3-super-120b-a12b`
-- Meterless Runtime: `LLM_BASE_URL=http://127.0.0.1:8088/v1`, `LLM_MODEL=meterless/auto`, token from `<stateDir>/proxy-token`
+## Validation
 
-The reinjected memory block goes into the prompt; the answer cites memory ids. Both modes are labeled in the output. Run `npm test` for the client's unit tests.
+```bash
+node --import tsx --test src/agents/*.test.ts src/why/*.test.ts src/memory/*.test.ts demo/*.test.ts
+node --import tsx --test test/*.test.ts
+```
 
-## Extension ideas by track
+The owned investigator/Why/memory/demo suite passed 114 tests on2026-10-25. This includes injected HTTP/model tests, not 114 real model investigations. Real model behavior can fail schema or consistency checks and is not guaranteed by this test count.
 
-- **Memory agents**: extend mining with your own event types; wire `feedback` to thumbs up/down; build the dream review UI.
-- **Desktop agents**: pair the notebook with Relay-style execution; memories become preconditions for actions.
-- **Creative swarms**: when the swarm orchestration engine drops, fan out variants and remember which ones the user kept.
-- **Enterprise workflow**: point `remember` at your CRM export; `ask` becomes account context on demand.
+The following require a running sandbox and Zetaris:
 
-Rubric and tracks: [docs/community/hackathon-guide.md](../../docs/community/hackathon-guide.md). Engine spec: [engines/hmem/AGENTS.md](../../engines/hmem/AGENTS.md).
+```bash
+npm run check:access -- --all
+npm run check:facts
+```
+
+`npm run verify:recovery` is a separate recovery acceptance workflow: inspect it before use; it mutates/resets disposable fixtures. Do not run it during recording or independent evidence review.
+
+## Integration and attribution
+
+| Component | Actual role |
+|---|---|
+| Zetaris | Registers three separate Postgres sources; fixed readonly queries retrieve billing, mappings and entitlement trails, including cross-source joins. |
+| Meterless H-MEM | Pinned reference engine stores/recalls local diagnostic hints. Deterministic reference embedding is disclosed. |
+| NVIDIA Nemotron | Actual model investigation and Checker calls through configured NVIDIA hosted API; model response IDs retained when available. |
+| Cursor | Used for implementation and development records. Later bounded consistency changes were implemented by Codex local tools after Cursor provider connection failure; do not attribute all edits exclusively to Cursor. |
+| Agentel | Branding and proposed identity/evidence collaboration context. Formal identity binding, Mission collaboration and Verified Work are not established by this prototype. |
+
+The project began from the Meterless `agentathon-starter` research notebook. Retained `notebook.ts` is the starter example, not the Revenue Lens entrypoint. Existing platform/starter dependencies, pre-window preparation and in-window contributions require an accurate final submission disclosure; this README does not settle competition eligibility or sponsor award criteria.
+
+## Current limits
+
+Explanation consistency enforcement fails closed on detected contradictions or missing required assessments. A real model may still omit fields or write incorrect free-text timing; manually review new investigations before filming. Changing prompts/guards does not retrospectively validate older footage. New audited H-MEM lessons and a fresh paired run are needed before presenting the updated memory behavior as a live result.
+
+Only retargeting an existing sandbox entitlement is implemented. New entitlement creation, arbitrary repair scripts, real customer connectors, Agent task/token recovery and production deployment are outside this version. Agentel Lens for Agent task investigation/recovery is a future direction, not implemented functionality.

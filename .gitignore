@@ -5,3 +5,6 @@ vendor/
 .DS_Store
 infra/.env
 seed/out/
+
+# Local investigation memory; never publish runtime records
+.revenue-lens-memory/

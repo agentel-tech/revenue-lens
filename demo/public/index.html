@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Revenue Lens — by Agentel</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="workbench">
+      <header class="topbar">
+        <div class="brand">
+          <img class="brand-logo" src="/brand/logo.png" alt="Agentel" width="36" height="36" />
+          <div class="brand-text">
+            <h1 class="brand-name">Revenue Lens</h1>
+            <p class="brand-sub">by Agentel</p>
+          </div>
+        </div>
+        <div class="env-block">
+          <span class="env-name">Agentel Revenue Lab</span>
+          <ul class="env-tags" aria-label="Lab environment">
+            <li>Sandbox</li>
+            <li>Synthetic data</li>
+            <li>Injected fault</li>
+          </ul>
+        </div>
+      </header>
+
+      <section class="hero">
+        <h2 class="hero-title">
+          <span class="hero-line">Paid. Provisioned.</span>
+          <span class="hero-line">Still locked out?</span>
+        </h2>
+        <p class="hero-lede">
+          Find why a paid customer lost access. Review the evidence. Restore the right workspace.
+        </p>
+      </section>
+
+      <nav class="stages" id="stages" aria-label="Investigation stages">
+        <ol>
+          <li data-stage="observe" class="stage is-current"><span class="stage-num">1</span><span class="stage-label">Observe</span></li>
+          <li data-stage="explain" class="stage"><span class="stage-num">2</span><span class="stage-label">Explain</span></li>
+          <li data-stage="review" class="stage"><span class="stage-num">3</span><span class="stage-label">Review</span></li>
+          <li data-stage="restore" class="stage"><span class="stage-num">4</span><span class="stage-label">Restore</span></li>
+        </ol>
+      </nav>
+
+      <div class="grid">
+        <section class="panel" id="panel-customer">
+          <h3 class="panel-title"><span class="stage-num inline">1</span> Customer</h3>
+          <label class="field-label" for="account">Account</label>
+          <select id="account"></select>
+          <p id="accountMeta" class="meta account-meta"></p>
+
+          <div class="access-block" id="accessBlock">
+            <div class="access-row">
+              <span class="field-label">Access</span>
+              <span id="accessBadge" class="access-badge is-unknown">Unknown</span>
+            </div>
+            <p id="accessResult" class="access-detail">Not probed yet.</p>
+          </div>
+
+          <label class="mem-toggle" for="memoryEnabled">
+            <input type="checkbox" id="memoryEnabled" checked />
+            <span>Use H-MEM priority hints</span>
+          </label>
+          <p class="meta mem-toggle-note">Priority only — never changes eligibility or repair permission.</p>
+
+          <div class="btn-row">
+            <button type="button" id="testAccess" class="btn-secondary">Test access</button>
+            <button type="button" id="investigate" class="btn-primary">Investigate</button>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-timeline">
+          <h3 class="panel-title"><span class="stage-num inline">2</span> Timeline</h3>
+          <p id="runMeta" class="meta">No run loaded.</p>
+          <p id="runMemoryMeta" class="meta run-memory-meta" hidden></p>
+          <ol id="timeline" class="timeline"></ol>
+          <details id="rawTraceWrap" class="raw-wrap">
+            <summary>Raw trace JSON</summary>
+            <pre id="trace">No run yet.</pre>
+          </details>
+        </section>
+
+        <section class="panel panel-wide" id="panel-why">
+          <h3 class="panel-title"><span class="stage-num inline">2</span> Why</h3>
+          <div id="why" class="why-host">
+            <p class="muted">Run an investigation to explain what the evidence shows for this customer.</p>
+          </div>
+          <details class="raw-wrap">
+            <summary>Markdown export</summary>
+            <pre id="whyMd"></pre>
+          </details>
+        </section>
+
+        <section class="panel panel-wide" id="panel-repair">
+          <h3 class="panel-title"><span class="stage-num inline">3</span> Repair</h3>
+          <div id="planBox" class="plan-box">
+            <p class="muted">No repair candidate on this run yet.</p>
+          </div>
+          <div class="btn-row">
+            <button type="button" id="confirmRepair" class="btn-primary" disabled>Confirm repair</button>
+            <button type="button" id="retryRepair" class="btn-secondary" disabled hidden>Retry same repair</button>
+          </div>
+          <pre id="repairOut" class="repair-out" hidden></pre>
+        </section>
+
+        <section class="panel" id="panel-scan">
+          <h3 class="panel-title">Tenant scan</h3>
+          <p class="meta">
+            Read-only check of permitted synthetic cast accounts. Cap and time budget come from the lab server (not
+            guessed). Partial when capped, timed out, or incomplete. No batch repairs — open one account to investigate.
+          </p>
+          <p id="scanBudget" class="meta scan-budget"></p>
+          <label class="field-label" for="scanTenant">Tenant</label>
+          <select id="scanTenant"></select>
+          <div class="btn-row" style="margin-top: 0.55rem">
+            <button type="button" id="runScan" class="btn-secondary">Scan tenant</button>
+          </div>
+          <p id="scanProgress" class="meta scan-progress" hidden aria-live="polite"></p>
+          <p id="scanSummary" class="meta scan-summary"></p>
+          <div id="scanRows" class="scan-rows"></div>
+        </section>
+
+        <section class="panel" id="panel-memory">
+          <h3 class="panel-title">H-MEM recall</h3>
+          <p class="meta">
+            Tenant-scoped priority hints from prior accepted findings. Read-only here — investigate uses the checkbox above
+            when enabled.
+          </p>
+          <label class="field-label" for="memoryTenant">Tenant</label>
+          <select id="memoryTenant"></select>
+          <div class="btn-row" style="margin-top: 0.55rem">
+            <button type="button" id="recallMemory" class="btn-secondary">Recall lessons</button>
+          </div>
+          <p id="memoryDisclosure" class="meta memory-disclosure"></p>
+          <p id="memorySummary" class="meta"></p>
+          <div id="memoryLessons" class="memory-lessons"></div>
+        </section>
+
+        <section class="panel panel-wide" id="panel-compare">
+          <h3 class="panel-title">Compare runs</h3>
+          <p class="meta">
+            Paste server run ids (survives reload) or pick from this session. Shows actual first tool, memory toggle, recalled
+            lesson ids, and suggested priority — never forces a different action.
+          </p>
+          <div class="compare-grid">
+            <div>
+              <label class="field-label" for="compareRunAId">Run A ID</label>
+              <input
+                type="text"
+                id="compareRunAId"
+                list="compareRunList"
+                class="compare-id-input"
+                placeholder="run-…"
+                autocomplete="off"
+                spellcheck="false"
+              />
+              <label class="field-label" for="compareRunA">Session pick A</label>
+              <select id="compareRunA"></select>
+            </div>
+            <div>
+              <label class="field-label" for="compareRunBId">Run B ID</label>
+              <input
+                type="text"
+                id="compareRunBId"
+                list="compareRunList"
+                class="compare-id-input"
+                placeholder="run-…"
+                autocomplete="off"
+                spellcheck="false"
+              />
+              <label class="field-label" for="compareRunB">Session pick B</label>
+              <select id="compareRunB"></select>
+            </div>
+          </div>
+          <datalist id="compareRunList"></datalist>
+          <div class="btn-row" style="margin-top: 0.55rem">
+            <button type="button" id="compareRuns" class="btn-secondary">Compare</button>
+          </div>
+          <div id="compareOut" class="compare-out muted">No comparison yet.</div>
+        </section>
+      </div>
+
+      <footer class="foot">
+        <details class="about-lab">
+          <summary>About this lab / Technical details</summary>
+          <div class="about-body">
+            <p>
+              Synthetic cast in Agentel Revenue Lab. Proposed roles Workflow Atlas / LoopSmith are unbound — not formally
+              verified Agentel identities.
+            </p>
+            <p>
+              Bound to 127.0.0.1. Cast tokens never reach the browser. Repair confirmation sends only the run id and matching
+              intentKey; client-supplied plans are rejected. Source status comes only from this run’s tool facts — no invented
+              network health. Recovery requires receipt (applied or replayed) and probe HTTP 200.
+            </p>
+            <p>
+              Tenant scan covers permitted synthetic cast only (50 payment-line cap; partial when incomplete). H-MEM uses
+              deterministic reference embedding for priority hints only — not current facts, not eligibility.
+            </p>
+          </div>
+        </details>
+      </footer>
+    </div>
+
+    <dialog id="repairConfirmDialog" class="repair-dialog" aria-labelledby="repairConfirmTitle">
+      <form method="dialog" id="repairConfirmForm">
+        <h2 id="repairConfirmTitle" class="repair-dialog-title">Confirm repair</h2>
+        <p id="repairConfirmLead" class="repair-dialog-lead">Review the exact change before writing.</p>
+        <dl id="repairConfirmDetails" class="repair-dialog-dl">
+          <dt>Account</dt><dd id="rcAccount"></dd>
+          <dt>Entitlement</dt><dd id="rcEntitlement"></dd>
+          <dt>Workspace</dt><dd id="rcWorkspace"></dd>
+          <dt>Feature</dt><dd id="rcFeature"></dd>
+          <dt>Intent</dt><dd id="rcIntent"><code></code></dd>
+          <dt>Run</dt><dd id="rcRun"><code></code></dd>
+        </dl>
+        <p class="repair-dialog-note">No write runs until you click <strong>Confirm this repair</strong>. Cancel closes without calling the server.</p>
+        <div class="repair-dialog-actions">
+          <button type="button" id="repairConfirmCancel" class="btn-secondary" value="cancel">Cancel</button>
+          <button type="button" id="repairConfirmSubmit" class="btn-primary" value="confirm">Confirm this repair</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
