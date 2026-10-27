@@ -4,6 +4,8 @@ A paid customer cannot use their service, although provisioning reports success.
 
 This is a local synthetic hackathon prototype for Track 02, “The Agent That Can Explain Why”. Synthetic customers and injected faults are labelled. It is not a production service or evidence of real customer adoption.
 
+For the separate three-source Zetaris semantic-layer and data-quality experiment, see [USL evidence and reproduction](docs/ZETARIS-USL.md). The existing Investigator does not query that USL.
+
 ## What works
 
 - Read-only investigation: a real configured model chooses allowlisted tools; an independent model role checks the proposed explanation against gathered records. These are model workflow roles, not authenticated Agentel network identities.
