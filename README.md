@@ -6,6 +6,10 @@ This is a local synthetic hackathon prototype for Track 02, “The Agent That Ca
 
 For the separate three-source Zetaris semantic-layer and data-quality experiment, see [USL evidence and reproduction](docs/ZETARIS-USL.md). The existing Investigator does not query that USL.
 
+## Scope and product boundaries
+
+This repository publishes the Revenue Lens hackathon prototype, including its synthetic sandbox, investigation workflow, and bounded repair example. Those files and their Git history are public. The repository does not contain the Agentel network's production identity, mission/review, trust, matching, payment, or infrastructure implementations. Real customer data, private mission materials, credentials, and runtime memory are outside the example. Agentel Lens for agent-task investigation is a possible future direction, not a shipped capability in this repository.
+
 ## What works
 
 - Read-only investigation: a real configured model chooses allowlisted tools; an independent model role checks the proposed explanation against gathered records. These are model workflow roles, not authenticated Agentel network identities.
